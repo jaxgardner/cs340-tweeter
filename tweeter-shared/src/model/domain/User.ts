@@ -1,3 +1,5 @@
+import { UserDto } from "../dto/UserDto";
+
 export class User {
   private _firstName: string;
   private _lastName: string;
@@ -50,6 +52,21 @@ export class User {
 
   public set imageUrl(value: string) {
     this._imageUrl = value;
+  }
+
+  public static fromDto(dto: UserDto | null): User | null {
+    return dto === null
+      ? null
+      : new User(dto.firstName, dto.lastName, dto.alias, dto.imageUrl);
+  }
+
+  public get dto(): UserDto {
+    return {
+      firstName: this.firstName,
+      lastName: this.lastName,
+      alias: this.alias,
+      imageUrl: this.imageUrl,
+    };
   }
 
   public equals(other: User): boolean {
