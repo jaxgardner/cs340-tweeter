@@ -1,32 +1,42 @@
 import { Buffer } from "buffer";
 import { AuthToken, FakeData, User } from "tweeter-shared";
+import { ServerFacade } from "../../network/ServerFacade";
 
 export class UserService {
+  private serverFacade = new ServerFacade();
+
   public async getUser(
     authToken: AuthToken,
     alias: string
   ): Promise<User | null> {
-    // TODO: Replace with the result of calling server
-    return FakeData.instance.findUserByAlias(alias);
+    const userData = await this.serverFacade.getUser({
+      token: authToken.token,
+      alias: alias,
+    });
+
+    return User.fromDto(userData.user);
   }
 
   public async logout(authToken: AuthToken): Promise<void> {
-    // Pause so we can see the logging out message. Delete when the call to the server is implemented.
-    await new Promise((res) => setTimeout(res, 1000));
+    return this.serverFacade.logout({ token: authToken.token });
   }
 
   public async login(
     alias: string,
     password: string
   ): Promise<[User, AuthToken]> {
-    // TODO: Replace with the result of calling the server
-    const user = FakeData.instance.firstUser;
+    const userResponse = await this.serverFacade.login({
+      alias: alias,
+      password: password,
+    });
 
-    if (user === null) {
+    if (userResponse === null) {
       throw new Error("Invalid alias or password");
     }
 
-    return [user, FakeData.instance.authToken];
+    const user = User.fromDto(userResponse.user);
+
+    return [user!, FakeData.instance.authToken];
   }
 
   public async register(
@@ -37,17 +47,23 @@ export class UserService {
     userImageBytes: Uint8Array,
     imageFileExtension: string
   ): Promise<[User, AuthToken]> {
-    // Not neded now, but will be needed when you make the request to the server in milestone 3
-    const imageStringBase64: string =
-      Buffer.from(userImageBytes).toString("base64");
+    const imageStringBase64 = Buffer.from(userImageBytes);
 
-    // TODO: Replace with the result of calling the server
-    const user = FakeData.instance.firstUser;
+    const userData = await this.serverFacade.register({
+      firstName: firstName,
+      lastName: lastName,
+      alias: alias,
+      password: password,
+      userImageBytes: imageStringBase64,
+      imageFileExtension: imageFileExtension,
+    });
 
-    if (user === null) {
+    if (userData === null) {
       throw new Error("Invalid registration");
     }
 
-    return [user, FakeData.instance.authToken];
+    const user = User.fromDto(userData.user);
+
+    return [user!, FakeData.instance.authToken];
   }
 }
