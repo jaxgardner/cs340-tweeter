@@ -48,10 +48,15 @@ export class UserInfoPresenter extends LoadingPresenter<
     );
   }
 
-  public async setNumbFollowees(authToken: AuthToken, displayedUser: User) {
+  public async setNumbFollowees(
+    requestingAlias: string,
+    authToken: AuthToken,
+    displayedUser: User
+  ) {
     this.doFailureReportingOperation(
       async () => {
         this._followeeCount = await this.service.getFolloweeCount(
+          requestingAlias,
           authToken,
           displayedUser
         );
@@ -61,10 +66,15 @@ export class UserInfoPresenter extends LoadingPresenter<
     );
   }
 
-  public async setNumbFollowers(authToken: AuthToken, displayedUser: User) {
+  public async setNumbFollowers(
+    requestingAlias: string,
+    authToken: AuthToken,
+    displayedUser: User
+  ) {
     this.doFailureReportingOperation(
       async () => {
         this._followerCount = await this.service.getFollowerCount(
+          requestingAlias,
           authToken,
           displayedUser
         );
@@ -74,13 +84,18 @@ export class UserInfoPresenter extends LoadingPresenter<
     );
   }
 
-  public async followDisplayedUser(displayedUser: User, authToken: AuthToken) {
+  public async followDisplayedUser(
+    currentUserAlias: string,
+    displayedUser: User,
+    authToken: AuthToken
+  ) {
     this.doFailureReportingOperation(
       async () => {
         this.isLoading = true;
         this.view.displayInfoMessage!(`Following ${displayedUser.name}...`, 0);
 
         const [followerCount, followeeCount] = await this.service.follow(
+          currentUserAlias,
           authToken!,
           displayedUser!
         );
@@ -98,6 +113,7 @@ export class UserInfoPresenter extends LoadingPresenter<
   }
 
   public async unfollowDisplayedUser(
+    currentUserAlias: string,
     displayedUser: User,
     authToken: AuthToken
   ) {
@@ -110,6 +126,7 @@ export class UserInfoPresenter extends LoadingPresenter<
         );
 
         const [followerCount, followeeCount] = await this.service.unfollow(
+          currentUserAlias,
           authToken!,
           displayedUser!
         );

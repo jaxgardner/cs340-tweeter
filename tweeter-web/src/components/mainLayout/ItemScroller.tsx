@@ -20,7 +20,7 @@ const ItemScroller = <Item, Service>(props: Props<Item, Service>) => {
   const [newItems, setNewItems] = useState<Item[]>([]);
   const [changedDisplayedUser, setChangedDisplayedUser] = useState(true);
 
-  const { displayedUser, authToken } = useUserInfo();
+  const { displayedUser, authToken, currentUser } = useUserInfo();
 
   // Initialize the component whenever the displayed user changes
   useEffect(() => {
@@ -56,7 +56,11 @@ const ItemScroller = <Item, Service>(props: Props<Item, Service>) => {
   const [presenter] = useState(props.presenterGenerator(listener));
 
   const loadMoreItems = async () => {
-    presenter.loadMoreItems(authToken!, displayedUser!.alias);
+    presenter.loadMoreItems(
+      currentUser!.alias,
+      authToken!,
+      displayedUser!.alias
+    );
     setChangedDisplayedUser(false);
   };
 

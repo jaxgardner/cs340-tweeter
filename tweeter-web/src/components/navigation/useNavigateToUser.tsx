@@ -23,7 +23,11 @@ const useNavigateToUser = (): UserNavigation => {
     try {
       const alias = extractAlias(event.target.toString());
 
-      const user = await userService.getUser(authToken!, alias);
+      const user = await userService.getUser(
+        currentUser!.alias,
+        authToken!,
+        alias
+      );
 
       if (!!user) {
         if (currentUser!.equals(user)) {

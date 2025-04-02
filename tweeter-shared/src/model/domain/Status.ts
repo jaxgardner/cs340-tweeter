@@ -27,7 +27,6 @@ export class Status {
       post: this.post,
       user: this.user.dto,
       timestamp: this.timestamp,
-      postSegments: this.segments.map((segment) => segment.dto),
     };
   }
 

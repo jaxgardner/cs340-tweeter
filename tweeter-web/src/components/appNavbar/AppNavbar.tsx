@@ -9,7 +9,7 @@ import { AppNavbarPresenter } from "../../presenters/AppNavbarPresenter";
 
 const AppNavbar = () => {
   const location = useLocation();
-  const { authToken, clearUserInfo } = useUserInfo();
+  const { authToken, clearUserInfo, currentUser } = useUserInfo();
   const { displayInfoMessage, displayErrorMessage, clearLastInfoMessage } =
     useToastListener();
 
@@ -23,7 +23,7 @@ const AppNavbar = () => {
   );
 
   const logOut = async () => {
-    presenter.logOut(authToken!);
+    presenter.logOut(currentUser!.alias, authToken!);
   };
 
   return (

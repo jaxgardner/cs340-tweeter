@@ -11,7 +11,7 @@ export abstract class PagedItemPresenter<Item, Service> extends Presenter<
   PagedItemView<Item>,
   Service
 > {
-  private _hasMoreItems = true;
+  private _hasMoreItems = false;
   private _lastItem: Item | null = null;
 
   public get hasMoreItems() {
@@ -32,17 +32,23 @@ export abstract class PagedItemPresenter<Item, Service> extends Presenter<
 
   reset() {
     this._lastItem = null;
-    this._hasMoreItems = true;
+    this._hasMoreItems = false;
   }
 
-  public async loadMoreItems(authToken: AuthToken, userAlias: string) {
+  public async loadMoreItems(
+    requestingAlias: string,
+    authToken: AuthToken,
+    userAlias: string
+  ) {
     this.doFailureReportingOperation(
       async () => {
         const [newItems, hasMore] = await this.getMoreItems(
+          requestingAlias,
           authToken,
           userAlias
         );
 
+        console.log(hasMore);
         this.hasMoreItems = hasMore;
         this.lastItem = newItems[newItems.length - 1];
         this.view.addItems(newItems);
@@ -53,6 +59,7 @@ export abstract class PagedItemPresenter<Item, Service> extends Presenter<
   }
 
   protected abstract getMoreItems(
+    requestingAlias: string,
     authToken: AuthToken,
     userAlias: string
   ): Promise<[Item[], boolean]>;

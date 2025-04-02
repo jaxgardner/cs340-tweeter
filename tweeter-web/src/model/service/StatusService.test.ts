@@ -17,8 +17,9 @@ describe("StatusService Integration Test", () => {
     lastItem = null;
   });
 
-  it("should return a user's story pages successfully", async () => {
+  it("should return a user's story pages successfully test", async () => {
     const [statuses, hasMore] = await statusService.loadMoreStoryItems(
+      userAlias,
       authToken,
       userAlias,
       pageSize,

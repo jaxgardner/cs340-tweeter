@@ -7,8 +7,13 @@ export class FeedScrollerPresenter extends StatusItemPresenter {
     return "load feed items";
   }
 
-  protected getMoreItems(authToken: AuthToken, userAlias: string) {
+  protected getMoreItems(
+    requestingAlias: string,
+    authToken: AuthToken,
+    userAlias: string
+  ) {
     return this.service.loadMoreFeedItems(
+      requestingAlias,
       authToken,
       userAlias,
       PAGE_SIZE,

@@ -26,8 +26,8 @@ const UserInfo = () => {
 
   useEffect(() => {
     presenter.setIsFollowerStatus(authToken!, currentUser!, displayedUser!);
-    presenter.setNumbFollowees(authToken!, displayedUser!);
-    presenter.setNumbFollowers(authToken!, displayedUser!);
+    presenter.setNumbFollowees(currentUser!.alias, authToken!, displayedUser!);
+    presenter.setNumbFollowers(currentUser!.alias, authToken!, displayedUser!);
   }, [displayedUser]);
 
   const switchToLoggedInUser = (event: React.MouseEvent): void => {
@@ -40,7 +40,11 @@ const UserInfo = () => {
   ): Promise<void> => {
     event.preventDefault();
 
-    presenter.followDisplayedUser(displayedUser!, authToken!);
+    presenter.followDisplayedUser(
+      currentUser!.alias,
+      displayedUser!,
+      authToken!
+    );
   };
 
   const unfollowDisplayedUser = async (
@@ -48,7 +52,11 @@ const UserInfo = () => {
   ): Promise<void> => {
     event.preventDefault();
 
-    presenter.unfollowDisplayedUser(displayedUser!, authToken!);
+    presenter.unfollowDisplayedUser(
+      currentUser!.alias,
+      displayedUser!,
+      authToken!
+    );
   };
 
   return (

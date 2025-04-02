@@ -11,7 +11,7 @@ import { Buffer } from "buffer";
 describe("ServerFacade Integration Tests", () => {
   const serverFacade = new ServerFacade();
 
-  test("register", async () => {
+  test("register test", async () => {
     const request: RegisterRequest = {
       alias: "testuser",
       password: "password",
@@ -28,8 +28,9 @@ describe("ServerFacade Integration Tests", () => {
     expect(response.user.alias).toBe("@allen");
   });
 
-  test("getMoreFollowers", async () => {
+  test("getMoreFollowers test", async () => {
     const request: PagedUserItemRequest = {
+      requestingAlias: "testuser",
       token: "testtoken",
       userAlias: "testuser",
       pageSize: 10,
@@ -46,6 +47,7 @@ describe("ServerFacade Integration Tests", () => {
 
   test("getFolloweeCount", async () => {
     const request: GetFollowsCountRequest = {
+      requestingAlias: "testuser",
       token: "testtoken",
       userAlias: "testuser",
     };

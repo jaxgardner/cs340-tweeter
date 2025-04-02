@@ -1,30 +1,92 @@
 import { Buffer } from "buffer";
-import { AuthToken, FakeData, UserDto } from "tweeter-shared";
+import bcrypt from "bcryptjs";
+import { AuthToken, User, UserDto } from "tweeter-shared";
+import { IUserDao, IUserDaoFactory } from "../dao/interface/IUserDao";
+import { IS3Dao } from "../dao/interface/IS3Dao";
 
 export class UserService {
-  public async getUser(token: string, alias: string): Promise<UserDto | null> {
-    // TODO: Replace with the result of calling server
-    const user = FakeData.instance.findUserByAlias(alias);
-    return user?.dto ?? null;
+  private readonly userDao: IUserDao;
+
+  constructor(userDaoFactory: IUserDaoFactory) {
+    this.userDao = userDaoFactory.createUserDao();
   }
 
-  public async logout(token: string): Promise<void> {
-    // Pause so we can see the logging out message. Delete when the call to the server is implemented.
-    await new Promise((res) => setTimeout(res, 1000));
+  public async verifyAuthToken(
+    requestingAlias: string,
+    token: string
+  ): Promise<boolean> {
+    const requestingUser = await this.userDao.getUser(requestingAlias);
+    if (requestingUser === null) {
+      throw new Error("Bad Request Invalid token");
+    }
+    const authToken = AuthToken.fromJson(requestingUser.authToken);
+
+    if (authToken?.token !== token) {
+      throw new Error("Bad Request Invalid token", requestingUser.authToken);
+    }
+    const currentTime = Date.now();
+    if (currentTime - authToken.timestamp > requestingUser.expirationTime) {
+      throw new Error("Bad Request Token has expired");
+    }
+
+    return true;
+  }
+
+  public async getUser(alias: string): Promise<UserDto | null> {
+    try {
+      const userData = await this.userDao.getUser(alias);
+
+      const user = new User(
+        userData.firstName,
+        userData.lastName,
+        userData.alias,
+        userData.imageUrl
+      );
+
+      return user?.dto ?? null;
+    } catch (error) {
+      throw new Error("Server Error Failed to get user", error as Error);
+    }
+  }
+
+  public async logout(alias: string): Promise<void> {
+    await this.userDao.setAuthToken(alias, "", 0);
   }
 
   public async login(
     alias: string,
     password: string
   ): Promise<[UserDto, AuthToken]> {
-    // TODO: Replace with the result of calling the server
-    const user = FakeData.instance.firstUser;
-
-    if (user === null) {
-      throw new Error("Invalid alias or password");
+    const formattedAlias = alias.startsWith("@") ? alias : "@" + alias;
+    const userData = await this.userDao.getUser(formattedAlias);
+    if (userData === null) {
+      throw new Error("Bad Request Invalid alias or password");
     }
 
-    return [user.dto, FakeData.instance.authToken];
+    const isPasswordValid = await bcrypt.compare(password, userData.password);
+    if (!isPasswordValid) {
+      throw new Error("Bad Request Invalid alias or password");
+    }
+    const authToken = AuthToken.Generate();
+    const expirationTime = 60 * 60 * 1000;
+    try {
+      await this.userDao.setAuthToken(
+        formattedAlias,
+        authToken.toJson(),
+        expirationTime
+      );
+    } catch (error) {
+      throw new Error("Server Error Failed to set auth token", error as Error);
+    }
+
+    const user = new User(
+      userData.firstName,
+      userData.lastName,
+      formattedAlias,
+      userData.imageUrl
+    );
+
+    return [user.dto, authToken];
   }
 
   public async register(
@@ -33,19 +95,46 @@ export class UserService {
     alias: string,
     password: string,
     userImageBytes: Uint8Array,
-    imageFileExtension: string
+    imageFileExtension: string,
+    s3Dao: IS3Dao
   ): Promise<[UserDto, AuthToken]> {
-    // Not needed now, but will be needed when you make the request to the server in milestone 3
-    const imageStringBase64: string =
-      Buffer.from(userImageBytes).toString("base64");
+    const hashedPassword = await bcrypt.hash(password, 10);
 
-    // TODO: Replace with the result of calling the server
-    const user = FakeData.instance.firstUser;
-
-    if (user === null) {
-      throw new Error("Invalid registration");
+    const imageFileName = `${alias}.${imageFileExtension}`;
+    const imageContentType = `image/${imageFileExtension}`;
+    const imageKey = `user-images/${imageFileName}`;
+    const imageBuffer = Buffer.from(userImageBytes);
+    let imageUrl: string;
+    try {
+      imageUrl = await s3Dao.uploadFile(
+        imageKey,
+        imageBuffer,
+        imageContentType
+      );
+    } catch (error) {
+      throw new Error(
+        "Server Error Failed to upload image to S3",
+        error as Error
+      );
     }
 
-    return [user.dto, FakeData.instance.authToken];
+    const formattedAlias = alias.startsWith("@") ? alias : "@" + alias;
+    const authToken = AuthToken.Generate();
+    const expirationTime = 60 * 60 * 1000;
+    try {
+      const newUser = await this.userDao.register(
+        firstName,
+        lastName,
+        formattedAlias,
+        hashedPassword,
+        imageUrl,
+        authToken.toJson(),
+        expirationTime
+      );
+
+      return [newUser, authToken];
+    } catch (error) {
+      throw new Error("Server Error Failed to register user", error as Error);
+    }
   }
 }

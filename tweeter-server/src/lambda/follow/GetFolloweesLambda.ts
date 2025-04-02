@@ -1,21 +1,35 @@
 import { PagedUserItemRequest, PagedUserItemResponse } from "tweeter-shared";
 import { FollowService } from "../../model/service/FollowService";
+import { FollowDao } from "../../model/dao/concrete/FollowDao";
+import { UserDaoFactory } from "../../model/dao/concrete/UserDaoFactory";
+import { UserService } from "../../model/service/UserService";
 
 export const handler = async (
   request: PagedUserItemRequest
-): Promise<PagedUserItemResponse> => {
-  const followService = new FollowService();
-  const [items, hasMore] = await followService.loadMoreFollowees(
-    request.token,
-    request.userAlias,
-    request.pageSize,
-    request.lastItem
-  );
+): Promise<PagedUserItemResponse | undefined> => {
+  const userDaoFactory = new UserDaoFactory();
+  const userService = new UserService(userDaoFactory);
 
-  return {
-    success: true,
-    message: null,
-    items,
-    hasMore,
-  };
+  try {
+    if (
+      await userService.verifyAuthToken(request.requestingAlias, request.token)
+    ) {
+      const followDao = new FollowDao();
+      const followService = new FollowService(followDao);
+      const [items, hasMore] = await followService.loadMoreFollowees(
+        request.userAlias,
+        request.pageSize,
+        request.lastItem
+      );
+
+      return {
+        success: true,
+        message: null,
+        items,
+        hasMore,
+      };
+    }
+  } catch (error) {
+    throw error;
+  }
 };

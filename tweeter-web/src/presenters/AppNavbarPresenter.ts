@@ -13,12 +13,12 @@ export class AppNavbarPresenter extends Presenter<AppNavView, UserService> {
     return new UserService();
   }
 
-  public async logOut(authToken: AuthToken): Promise<void> {
+  public async logOut(alias: string, authToken: AuthToken): Promise<void> {
     this.view.displayInfoMessage("Logging out...", 0);
 
     await this.doFailureReportingOperation(
       async () => {
-        await this.service.logout(authToken);
+        await this.service.logout(alias, authToken);
 
         this.view.clearLastInfoMessage();
         this.view.clearUserInfo();

@@ -6,10 +6,12 @@ export class UserService {
   private serverFacade = new ServerFacade();
 
   public async getUser(
+    requestingAlias: string,
     authToken: AuthToken,
     alias: string
   ): Promise<User | null> {
     const userData = await this.serverFacade.getUser({
+      requestingAlias: requestingAlias,
       token: authToken.token,
       alias: alias,
     });
@@ -17,8 +19,14 @@ export class UserService {
     return User.fromDto(userData.user);
   }
 
-  public async logout(authToken: AuthToken): Promise<void> {
-    return this.serverFacade.logout({ token: authToken.token });
+  public async logout(
+    requestingAlias: string,
+    authToken: AuthToken
+  ): Promise<void> {
+    return this.serverFacade.logout({
+      requestingAlias: requestingAlias,
+      token: authToken.token,
+    });
   }
 
   public async login(
@@ -35,8 +43,9 @@ export class UserService {
     }
 
     const user = User.fromDto(userResponse.user);
+    const authToken = AuthToken.fromJson(userResponse.authToken);
 
-    return [user!, FakeData.instance.authToken];
+    return [user!, authToken!];
   }
 
   public async register(
@@ -63,7 +72,8 @@ export class UserService {
     }
 
     const user = User.fromDto(userData.user);
+    const authToken = AuthToken.fromJson(userData.authToken);
 
-    return [user!, FakeData.instance.authToken];
+    return [user!, authToken!];
   }
 }

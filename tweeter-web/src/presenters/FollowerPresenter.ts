@@ -4,8 +4,13 @@ import { UserItemPresenter } from "./UserItemPresenter";
 export const PAGE_SIZE = 10;
 
 export class FollowerPresenter extends UserItemPresenter {
-  protected getMoreItems(authToken: AuthToken, userAlias: string) {
-    return this.service.loadMoreFollowees(
+  protected getMoreItems(
+    requestingAlias: string,
+    authToken: AuthToken,
+    userAlias: string
+  ) {
+    return this.service.loadMoreFollowers(
+      requestingAlias,
       authToken,
       userAlias,
       PAGE_SIZE,

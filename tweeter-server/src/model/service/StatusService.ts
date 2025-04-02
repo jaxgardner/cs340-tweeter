@@ -1,43 +1,64 @@
-import { AuthToken, FakeData, Status, StatusDto } from "tweeter-shared";
+import { StatusDto } from "tweeter-shared";
+import { IStatusDao } from "../dao/interface/IStatusDao";
+import { IFollowsDao } from "../dao/interface/IFollowsDao";
 
 export class StatusService {
-  private async getFakeData(
-    lastItem: StatusDto | null,
-    pageSize: number,
-    userAlias: string
-  ): Promise<[StatusDto[], boolean]> {
-    const [items, hasMore] = FakeData.instance.getPageOfStatuses(
-      Status.fromDto(lastItem),
-      pageSize
-    );
-    const dtos = items.map((status) => status.dto);
-    return [dtos, hasMore];
+  private readonly statusDao: IStatusDao;
+
+  constructor(statusDao: IStatusDao) {
+    this.statusDao = statusDao;
   }
 
   public async loadMoreStoryItems(
-    token: string,
     userAlias: string,
     pageSize: number,
     lastItem: StatusDto | null
   ): Promise<[StatusDto[], boolean]> {
-    // TODO: Replace with the result of calling server
-    return this.getFakeData(lastItem, pageSize, userAlias);
+    const [items, hasMore] = await this.statusDao.loadMoreStoryItems(
+      userAlias,
+      pageSize,
+      lastItem
+    );
+    return [items, hasMore];
   }
 
   public async loadMoreFeedItems(
-    token: string,
     userAlias: string,
     pageSize: number,
     lastItem: StatusDto | null
   ): Promise<[StatusDto[], boolean]> {
-    // TODO: Replace with the result of calling server
-    return this.getFakeData(lastItem, pageSize, userAlias);
+    const [items, hasMore] = await this.statusDao.loadMoreFeedItems(
+      userAlias,
+      pageSize,
+      lastItem
+    );
+    return [items, hasMore];
   }
 
-  public async postStatus(token: string, newStatus: StatusDto): Promise<void> {
-    // Pause so we can see the logging out message. Remove when connected to the server
-    await new Promise((f) => setTimeout(f, 2000));
+  public async postStatus(
+    requestingAlias: string,
+    newStatus: StatusDto,
+    followingDao: IFollowsDao
+  ): Promise<void> {
+    try {
+      const followers = await followingDao.getPageOfFollowers(
+        requestingAlias,
+        Number.MAX_SAFE_INTEGER,
+        undefined
+      );
 
-    // TODO: Call the server to post the status
+      const followerAliases = followers.items
+        ? followers.items.map((follower: Record<string, any>) => follower.alias)
+        : [];
+
+      return await this.statusDao.postStatus(
+        requestingAlias,
+        newStatus,
+        followerAliases
+      );
+    } catch (error) {
+      console.log(error);
+      throw new Error("Server Error Failed to post status", error as Error);
+    }
   }
 }

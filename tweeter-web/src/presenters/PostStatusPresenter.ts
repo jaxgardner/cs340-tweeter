@@ -26,7 +26,7 @@ export class PostStatusPresenter extends LoadingPresenter<
 
         const status = new Status(post, currentUser!, Date.now());
 
-        await this.service.postStatus(authToken, status);
+        await this.service.postStatus(currentUser!.alias, authToken, status);
 
         this.view.displayInfoMessage!("Status posted!", 2000);
         this.view.setPost("");
