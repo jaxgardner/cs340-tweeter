@@ -277,20 +277,24 @@ export class ServerFacade {
   }
 
   public async login(request: LoginRequest): Promise<LoginResponse> {
-    const response = await this.clientCommunicator.doPost<
-      LoginRequest,
-      LoginResponse
-    >(request, "/user/login");
+    try {
+      const response = await this.clientCommunicator.doPost<
+        LoginRequest,
+        LoginResponse
+      >(request, "/user/login");
 
-    if (response.success) {
-      if (response == null) {
-        throw new Error(`Unable to login`);
+      if (response.success) {
+        if (response == null) {
+          throw new Error(`Unable to login`);
+        } else {
+          return response;
+        }
       } else {
-        return response;
+        console.error(response);
+        throw new Error(response.message!);
       }
-    } else {
-      console.error(response);
-      throw new Error(response.message!);
+    } catch (error) {
+      throw error;
     }
   }
 

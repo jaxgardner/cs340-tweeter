@@ -88,6 +88,10 @@ export class StatusDao implements IStatusDao {
 
     await this.dynamoDbClient.send(new PutCommand(params));
 
+    if (aliasesFollowing.length === 0) {
+      return;
+    }
+
     const feedItems = aliasesFollowing.map((alias) => ({
       PutRequest: {
         Item: {

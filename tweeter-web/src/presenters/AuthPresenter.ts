@@ -29,7 +29,7 @@ export abstract class AuthPresenter<
     this.doFailureReportingOperation(
       async () => {
         this.isLoading = true;
-        this.handleAuthSubmission(submitData, rememberMe);
+        await this.handleAuthSubmission(submitData, rememberMe);
         this.view.navigate(submitData.afterLink);
       },
       message,

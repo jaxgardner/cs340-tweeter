@@ -22,13 +22,14 @@ export abstract class Presenter<V extends View, Service> {
   }
 
   public async doFailureReportingOperation(
-    operation: () => Promise<void>,
+    operation: () => Promise<any>,
     operationDescription: string,
     finallyOperation: () => void | null
   ): Promise<void> {
     try {
       await operation();
     } catch (error) {
+      console.log("GETTING ERROR");
       this.view.displayErrorMessage(
         `Failed to ${operationDescription} because of exception: ${error}`
       );

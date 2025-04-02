@@ -58,7 +58,12 @@ export class UserService {
     password: string
   ): Promise<[UserDto, AuthToken]> {
     const formattedAlias = alias.startsWith("@") ? alias : "@" + alias;
-    const userData = await this.userDao.getUser(formattedAlias);
+    let userData: Record<string, any> | null = null;
+    try {
+      userData = await this.userDao.getUser(formattedAlias);
+    } catch (error) {
+      throw new Error("Bad Request Failed to get user", error as Error);
+    }
     if (userData === null) {
       throw new Error("Bad Request Invalid alias or password");
     }

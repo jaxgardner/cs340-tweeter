@@ -13,11 +13,15 @@ export class LoginPresenter extends AuthPresenter<
     submitData: AuthSubmissionData,
     rememberMe: boolean
   ): Promise<void> {
-    const [user, authToken] = await this.service.login(
-      submitData.alias,
-      submitData.password
-    );
+    try {
+      const [user, authToken] = await this.service.login(
+        submitData.alias,
+        submitData.password
+      );
 
-    this.view.updateUserInfo(user, user, authToken, rememberMe);
+      this.view.updateUserInfo(user, user, authToken, rememberMe);
+    } catch (error) {
+      throw error;
+    }
   }
 }

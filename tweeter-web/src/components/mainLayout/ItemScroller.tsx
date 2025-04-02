@@ -22,17 +22,14 @@ const ItemScroller = <Item, Service>(props: Props<Item, Service>) => {
 
   const { displayedUser, authToken, currentUser } = useUserInfo();
 
-  // Initialize the component whenever the displayed user changes
+  // Combine the reset and initial load logic into a single useEffect to avoid duplicate renders
   useEffect(() => {
-    reset();
+    const initialize = async () => {
+      await reset();
+      await loadMoreItems();
+    };
+    initialize();
   }, [displayedUser]);
-
-  // Load initial items whenever the displayed user changes. Done in a separate useEffect hook so the changes from reset will be visible.
-  useEffect(() => {
-    if (changedDisplayedUser) {
-      loadMoreItems();
-    }
-  }, [changedDisplayedUser]);
 
   // Add new items whenever there are new items to add
   useEffect(() => {
@@ -44,7 +41,7 @@ const ItemScroller = <Item, Service>(props: Props<Item, Service>) => {
   const reset = async () => {
     setItems([]);
     setNewItems([]);
-    setChangedDisplayedUser(true);
+    setChangedDisplayedUser(false); // Ensure this is set to false to prevent triggering loadMoreItems again
     presenter.reset();
   };
 

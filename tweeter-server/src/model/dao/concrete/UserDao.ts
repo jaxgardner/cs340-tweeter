@@ -73,7 +73,7 @@ export class UserDao implements IUserDao {
 
     const result = await this.dynamoDbClient.send(new GetCommand(params));
     if (!result.Item) {
-      throw new Error("User not found");
+      throw new Error("Bad Request Failed to get user");
     }
     return result.Item;
   }
