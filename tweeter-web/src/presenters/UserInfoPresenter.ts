@@ -10,6 +10,12 @@ export class UserInfoPresenter extends LoadingPresenter<
   private _followeeCount: number = -1;
   private _followerCount: number = -1;
 
+  private onStateChange?: () => void; // Callback for state changes
+
+  public setStateChangeCallback(callback: () => void) {
+    this.onStateChange = callback;
+  }
+
   protected createService() {
     return new FollowService();
   }
@@ -24,6 +30,12 @@ export class UserInfoPresenter extends LoadingPresenter<
 
   public get followerCount() {
     return this._followerCount;
+  }
+
+  private notifyStateChange() {
+    if (this.onStateChange) {
+      this.onStateChange();
+    }
   }
 
   public async setIsFollowerStatus(
@@ -42,6 +54,7 @@ export class UserInfoPresenter extends LoadingPresenter<
             displayedUser
           );
         }
+        this.notifyStateChange(); // Notify state change
       },
       "determine follower status",
       () => null
@@ -60,6 +73,7 @@ export class UserInfoPresenter extends LoadingPresenter<
           authToken,
           displayedUser
         );
+        this.notifyStateChange(); // Notify state change
       },
       "get followees count",
       () => null
@@ -78,6 +92,7 @@ export class UserInfoPresenter extends LoadingPresenter<
           authToken,
           displayedUser
         );
+        this.notifyStateChange(); // Notify state change
       },
       "get followers count",
       () => null
@@ -103,6 +118,7 @@ export class UserInfoPresenter extends LoadingPresenter<
         this._isFollower = true;
         this._followerCount = followerCount;
         this._followeeCount = followeeCount;
+        this.notifyStateChange(); // Notify state change
       },
       "follow user",
       () => {
@@ -134,6 +150,7 @@ export class UserInfoPresenter extends LoadingPresenter<
         this._isFollower = false;
         this._followerCount = followerCount;
         this._followeeCount = followeeCount;
+        this.notifyStateChange(); // Notify state change
       },
       "unfollow user",
       () => {

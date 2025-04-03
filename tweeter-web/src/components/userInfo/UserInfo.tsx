@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import useToastListener from "../toaster/ToastListenerHook";
 import useUserInfo from "./useUserInfo";
 import { UserInfoPresenter } from "../../presenters/UserInfoPresenter";
+import { User } from "tweeter-shared";
 
 const UserInfo = () => {
   const { displayErrorMessage, displayInfoMessage, clearLastInfoMessage } =
@@ -20,15 +21,28 @@ const UserInfo = () => {
   const { currentUser, authToken, displayedUser, setDisplayedUser } =
     useUserInfo();
 
+  const [forceUpdate, setForceUpdate] = useState(0); // State to trigger re-renders
+
   if (!displayedUser) {
     setDisplayedUser(currentUser!);
   }
 
   useEffect(() => {
-    presenter.setIsFollowerStatus(authToken!, currentUser!, displayedUser!);
-    presenter.setNumbFollowees(currentUser!.alias, authToken!, displayedUser!);
-    presenter.setNumbFollowers(currentUser!.alias, authToken!, displayedUser!);
-  }, [displayedUser]);
+    // Register the state change callback
+    presenter.setStateChangeCallback(() => {
+      setForceUpdate((prev) => prev + 1); // Increment to trigger re-render
+    });
+
+    if (authToken && currentUser && displayedUser) {
+      presenter.setIsFollowerStatus(authToken, currentUser, displayedUser);
+      presenter.setNumbFollowees(currentUser.alias, authToken, displayedUser);
+      presenter.setNumbFollowers(currentUser.alias, authToken, displayedUser);
+    }
+
+    return () => {
+      presenter.setStateChangeCallback(() => undefined); // Clear callback on unmount
+    };
+  }, [authToken, currentUser, displayedUser]);
 
   const switchToLoggedInUser = (event: React.MouseEvent): void => {
     event.preventDefault();
@@ -39,8 +53,7 @@ const UserInfo = () => {
     event: React.MouseEvent
   ): Promise<void> => {
     event.preventDefault();
-
-    presenter.followDisplayedUser(
+    await presenter.followDisplayedUser(
       currentUser!.alias,
       displayedUser!,
       authToken!
@@ -51,8 +64,7 @@ const UserInfo = () => {
     event: React.MouseEvent
   ): Promise<void> => {
     event.preventDefault();
-
-    presenter.unfollowDisplayedUser(
+    await presenter.unfollowDisplayedUser(
       currentUser!.alias,
       displayedUser!,
       authToken!

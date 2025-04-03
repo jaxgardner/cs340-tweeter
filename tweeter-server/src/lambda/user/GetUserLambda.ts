@@ -1,16 +1,18 @@
 import { GetUserRequest, GetUserResponse } from "tweeter-shared";
 import { UserService } from "../../model/service/UserService";
 import { UserDaoFactory } from "../../model/dao/concrete/UserDaoFactory";
+import { AuthService } from "../../model/service/AuthService";
 
 export const handler = async (
   request: GetUserRequest
 ): Promise<GetUserResponse | undefined> => {
-  const userDaoFactory = new UserDaoFactory();
-  const userService = new UserService(userDaoFactory);
-  try {
-    if (
-      await userService.verifyAuthToken(request.requestingAlias, request.token)
-    ) {
+  const authService = new AuthService();
+  return authService.handleAuthenticatedRequest(
+    request.requestingAlias,
+    request.token,
+    async () => {
+      const userDaoFactory = new UserDaoFactory();
+      const userService = new UserService(userDaoFactory);
       const user = await userService.getUser(request.alias);
 
       return {
@@ -19,7 +21,5 @@ export const handler = async (
         user: user,
       };
     }
-  } catch (error) {
-    throw error;
-  }
+  );
 };

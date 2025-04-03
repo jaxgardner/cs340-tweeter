@@ -4,18 +4,16 @@ import {
 } from "tweeter-shared";
 import { StatusService } from "../../model/service/StatusService";
 import { StatusDaoFactory } from "../../model/dao/concrete/StatusDaoFactory";
-import { UserDaoFactory } from "../../model/dao/concrete/UserDaoFactory";
-import { UserService } from "../../model/service/UserService";
+import { AuthService } from "../../model/service/AuthService";
 
 export const handler = async (
   request: LoadStatusItemsRequest
 ): Promise<PagedStatusItemResponse | undefined> => {
-  const userDaoFactory = new UserDaoFactory();
-  const userService = new UserService(userDaoFactory);
-  try {
-    if (
-      await userService.verifyAuthToken(request.requestingAlias, request.token)
-    ) {
+  const authService = new AuthService();
+  return authService.handleAuthenticatedRequest(
+    request.requestingAlias,
+    request.token,
+    async () => {
       const statusDaoFactory = new StatusDaoFactory();
       const statusService = new StatusService(
         statusDaoFactory.createStatusDao()
@@ -33,8 +31,5 @@ export const handler = async (
         hasMore,
       };
     }
-  } catch (error) {
-    console.error("Error loading more feed items:", error);
-    throw error;
-  }
+  );
 };
